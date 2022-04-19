@@ -19,6 +19,14 @@ namespace LeaveManagement.Repositories
             return entity;
         }
 
+        //Task without <T> mean it does not need to return
+        // Task<T> needs a return type
+        public async Task AddRangeAsync(List<T> entities)
+        {
+            await context.AddRangeAsync(entities);
+            await context.SaveChangesAsync();
+        }
+
         public async Task DeleteAsync(int id)
         {
             
