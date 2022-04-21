@@ -106,7 +106,7 @@ namespace LeaveManagement.Data.Migrations
                         {
                             Id = "c9a8f8b6-0607-4243-a694-5b7c1442d8f4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ba8e7c24-9ef2-4c6b-95ae-6dbfb6d3a187",
+                            ConcurrencyStamp = "94681165-89f4-4109-b20a-d3e2ddbe53cc",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateOfBirth = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "kevin@gmail.com",
@@ -116,9 +116,9 @@ namespace LeaveManagement.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "KEVIN@GMAIL.COM",
                             NormalizedUserName = "KEVIN@GMAIL.COM",
-                            PasswordHash = "AQAAAAEAACcQAAAAEI19YMbUA6BKL7eolxe9RNfmqkkMmiJTk/zCQ73RRe3MKeMXj/olzJd+LxxVOiSCFA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEHWMNiLxSl8HVK5xv9AmUGwFJ6jjPqH9/WHzi2MWfp1UoSgOpomj1TJCBVRfA7GPrg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "171e4826-1d29-4932-b307-6a95db98784d",
+                            SecurityStamp = "4b857c84-f45b-45d8-8b0f-f1805ef3ea5c",
                             TwoFactorEnabled = false,
                             UserName = "kevin@gmail.com"
                         });
@@ -156,6 +156,51 @@ namespace LeaveManagement.Data.Migrations
                     b.HasIndex("LeaveTypeId");
 
                     b.ToTable("LeaveAllocations");
+                });
+
+            modelBuilder.Entity("LeaveManagement.Data.LeaveRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<bool?>("Approved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateRequested")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequestComments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestingEmployeeId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("LeaveManagement.Data.LeaveType", b =>
@@ -214,14 +259,14 @@ namespace LeaveManagement.Data.Migrations
                         new
                         {
                             Id = "c9a8f8b6-0607-4243-a694-5b7c1442d8f4",
-                            ConcurrencyStamp = "d2a78ba1-43b4-4e33-b817-f567ff255751",
+                            ConcurrencyStamp = "2d2182db-8e7b-4798-a9c3-0b3192d4e99a",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "c9a8f8b6-0607-baaf-a694-5b7c1442d8f4",
-                            ConcurrencyStamp = "0b295bee-5537-45cd-a44f-b836a675dc0a",
+                            ConcurrencyStamp = "3d9895fb-734c-48a9-8f7c-559ba9d67aa7",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -345,6 +390,17 @@ namespace LeaveManagement.Data.Migrations
                 });
 
             modelBuilder.Entity("LeaveManagement.Data.LeaveAllocation", b =>
+                {
+                    b.HasOne("LeaveManagement.Data.LeaveType", "LeaveType")
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LeaveType");
+                });
+
+            modelBuilder.Entity("LeaveManagement.Data.LeaveRequest", b =>
                 {
                     b.HasOne("LeaveManagement.Data.LeaveType", "LeaveType")
                         .WithMany()
