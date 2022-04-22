@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using LeaveManagement.Constants;
 using LeaveManagement.Contracts;
 using LeaveManagement.Data;
@@ -8,28 +9,31 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Repositories
 {
-    public class LeaveAllocationRepository: GenericRepository<LeaveAllocation>, ILeaveAllocationRepository
+    public class LeaveAllocationRepository : GenericRepository<LeaveAllocation>, ILeaveAllocationRepository
     {
         private readonly ApplicationDbContext context;
         private readonly UserManager<Employee> userManager;
         private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly AutoMapper.IConfigurationProvider configurationProvider;
         private readonly IMapper mapper;
 
         public LeaveAllocationRepository(ApplicationDbContext context,
             UserManager<Employee> userManager,
             ILeaveTypeRepository leaveTypeRepository,
-            IMapper mapper): base(context)
+            AutoMapper.IConfigurationProvider configurationProvider
+            , IMapper mapper) : base(context)
         {
             this.context = context;
             this.userManager = userManager;
             this.leaveTypeRepository = leaveTypeRepository;
+            this.configurationProvider = configurationProvider;
             this.mapper = mapper;
         }
 
         public async Task<bool> AllocationExists(string employeeId, int leaveTypeId, int period)
         {
-            return await context.LeaveAllocations.AnyAsync(q => q.EmployeeId == employeeId 
-                                                            && q.LeaveTypeId == leaveTypeId 
+            return await context.LeaveAllocations.AnyAsync(q => q.EmployeeId == employeeId
+                                                            && q.LeaveTypeId == leaveTypeId
                                                             && q.Period == period);
         }
 
@@ -37,11 +41,14 @@ namespace LeaveManagement.Repositories
         {
             var allocations = await context.LeaveAllocations
                 .Include(q => q.LeaveType)
-                .Where(q => q.EmployeeId == employeeId).ToListAsync();
+                .Where(q => q.EmployeeId == employeeId)
+                .ProjectTo<LeaveAllocationVM>(configurationProvider)
+                .ToListAsync();
+
             var employee = await userManager.FindByIdAsync(employeeId);
-                var employeeAllocationModel = mapper.Map<EmployeeAllocationVM>(employee);
-            employeeAllocationModel.LeaveAllocations = mapper.Map<List<LeaveAllocationVM>>(allocations);
-            
+            var employeeAllocationModel = mapper.Map<EmployeeAllocationVM>(employee);
+            employeeAllocationModel.LeaveAllocations = allocations;
+
             return employeeAllocationModel;
         }
 
@@ -49,6 +56,7 @@ namespace LeaveManagement.Repositories
         {
             var allocation = await context.LeaveAllocations
                 .Include(q => q.LeaveType)
+                .ProjectTo<LeaveAllocationEditVM>(configurationProvider)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (allocation == null)
@@ -72,10 +80,10 @@ namespace LeaveManagement.Repositories
             var employees = await userManager.GetUsersInRoleAsync(Roles.User);
             var period = DateTime.Now.Year;
             var leaveType = await leaveTypeRepository.GetAsync(leaveTypeId);
-            
+
             var allocations = new List<LeaveAllocation>();
 
-            foreach(var employee in employees)
+            foreach (var employee in employees)
             {
                 if (await AllocationExists(employee.Id, leaveTypeId, period))
                     continue; /// skip and don't add LeaveAllocation
@@ -90,7 +98,7 @@ namespace LeaveManagement.Repositories
 
             }
             await AddRangeAsync(allocations);
-            
+
         }
 
         public async Task<bool> UpdateEmployeellocation(LeaveAllocationVM model)
@@ -105,7 +113,7 @@ namespace LeaveManagement.Repositories
             leaveAllocation.NumberOfDays = model.NumberOfDays;
 
             await UpdateAsync(leaveAllocation);
-            
+
             return true;
         }
 
